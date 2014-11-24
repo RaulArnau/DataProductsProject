@@ -1,0 +1,79 @@
+Diamonds Analysis
+========================================================
+author: Raul Arnau  
+date: `r date()`
+
+Overview
+========================================================
+
+The application serves as a guide for the first steps during the analysis of a new dataset (in this case the `diamonds` dataset. It is organised in 5 tabbed windows, each one performing a step in the data analysis:
+
+- `Summary`: basic summary of dataset features
+- `Table`: complete dataset in a table where features can be selected, sorted and filtered
+- `Plot`: relates diamonds price with caret and lets the user change plot properties dynamically
+- `Panel Plot`: discriminates diamonds by type of cut quality and shows tendency using a linear regressor goodness of fit as metric 
+- `About`: describes the application and include some hints
+
+The following slides include details of each step
+
+Summary
+========================================================
+In this tab a summary of the complete dataset is printed, showing the available features, their ranges, median, mean, and some other useful stats:
+
+```{r summary, echo=FALSE, messages='FALSE'}
+library(ggplot2)
+summary(diamonds)
+```
+
+Table
+========================================================
+The complete dataset can be accessed and filtered using this widget. As an example, selecting the hole number of features we could see the following for the first 10 observations: 
+```{r table, echo=FALSE, messages='FALSE'}
+head(diamonds)
+```
+
+
+Plot
+========================================================
+
+The following figure shows an example of the output for the plot tab, using a purple scatter plot with 0.3 transparency and an auto smoothing curve:
+
+```{r plot, echo=FALSE, messages = 'FASLE'}
+# ggplot2
+library(ggplot2)
+p <- ggplot(aes(x = carat, y = price), data = diamonds)    
+p <- p + geom_point(color='purple', alpha = 0.3)
+p <- p + stat_smooth(method = 'auto', 
+  se = TRUE, level = 0.95, size = 1.2) 
+print(p)
+```
+
+Panel plot
+========================================================
+
+The following figure shows the the result of the lattice plot relating price with carat for the different values of quality cuts:
+
+```{r panelPlot, echo=FALSE, messages='FALSE'}
+library(latticeExtra)
+scatter.lattice <- xyplot(price ~ carat | cut, 
+  data = diamonds, 
+  panel = function(x, y, ...) {
+    panel.xyplot(x, y, ...)
+    lm1 <- lm(y ~ x)
+    lm1sum <- summary(lm1)
+    r2 <- lm1sum$adj.r.squared
+    panel.abline(a = lm1$coefficients[1], 
+      b = lm1$coefficients[2])
+    panel.text(labels = 
+        bquote(italic(R)^2 == 
+            .(format(r2, 
+              digits = 3))),
+      x = 4, y = 1000)
+    },
+  xscale.components = xscale.components.subticks,
+  yscale.components = yscale.components.subticks,
+  as.table = TRUE)
+print(scatter.lattice)
+```
+For each type of cut a regression line is fitted to the data, being R^2 the metric for its goodness of fit.
+
